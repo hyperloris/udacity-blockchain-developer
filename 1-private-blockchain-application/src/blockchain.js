@@ -11,6 +11,7 @@
 const SHA256 = require('crypto-js/sha256');
 const BlockClass = require('./block.js');
 const bitcoinMessage = require('bitcoinjs-message');
+const { MESSAGE_EXPIRATION_IN_SEC } = require('./constants');
 
 class Blockchain {
 
@@ -64,7 +65,17 @@ class Blockchain {
     _addBlock(block) {
         let self = this;
         return new Promise(async (resolve, reject) => {
-           
+           if (self.height >= 0) {
+               block.previousBlockHash = self.chain[self.chain.length - 1].hash;
+           }
+           const newChainHeight = self.height + 1;
+
+           block.time = new Date().getTime().toString().slice(0,-3);
+           block.height = newChainHeight;
+           block.hash = SHA256(JSON.stringify(block)).toString();
+
+           self.chain.push(block);
+           self.height = newChainHeight;
         });
     }
 
@@ -78,7 +89,8 @@ class Blockchain {
      */
     requestMessageOwnershipVerification(address) {
         return new Promise((resolve) => {
-            
+            const message = `${address}:${new Date().getTime().toString().slice(0,-3)}:starRegistry`;
+            resolve(message);
         });
     }
 
@@ -102,8 +114,23 @@ class Blockchain {
     submitStar(address, message, signature, star) {
         let self = this;
         return new Promise(async (resolve, reject) => {
-            
+            const isValid = self._isMessageValid(address, message, signature);
+            if (!isValid) {
+                reject('The message is invalid');
+            }
+
+            const block = new BlockClass.Block({ address, message, signature, star });
+            self._addBlock(block);
+            resolve(block);
         });
+    }
+
+    _isMessageValid(address, message, signature) {
+        const messageTime = parseInt(message.split(':')[1]);
+        const currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
+        const isTimeValid = currentTime - messageTime < MESSAGE_EXPIRATION_IN_SEC;
+        const isSignatureValid = bitcoinMessage.verify(message, address, signature);
+        return isTimeValid && isSignatureValid;
     }
 
     /**
@@ -115,7 +142,12 @@ class Blockchain {
     getBlockByHash(hash) {
         let self = this;
         return new Promise((resolve, reject) => {
-           
+            const block = self.chain.find(block => block.hash === hash);
+            if (block) {
+                resolve(block);
+            } else {
+                reject(`Unable to find block ${hash}`);
+            }
         });
     }
 
@@ -145,8 +177,15 @@ class Blockchain {
     getStarsByWalletAddress (address) {
         let self = this;
         let stars = [];
-        return new Promise((resolve, reject) => {
-            
+        return new Promise(async (resolve, reject) => {
+            for (let i = 1; i < self.chain.length; i++) {
+                const data = await self.chain[i].getBData();
+                if (data.address === address) {
+                    const { message, signature, ...star } = data;
+                    stars.push(star);
+                }
+            }
+            resolve(stars);
         });
     }
 
@@ -160,8 +199,23 @@ class Blockchain {
         let self = this;
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
-            
+            for (const block of self.chain) {
+                const isBlockValid = await block.validate();
+                const isBlockLinkValid = self._validateBlockLink(block);
+                if (!isBlockValid || !isBlockLinkValid) {
+                    errorLog.push(`Block ${block.height} has been tampered`);
+                }
+            }
+            resolve(errorLog);
         });
+    }
+
+    _validateBlockLink(block) {
+        if (block.height <= 0) {
+            return true;
+        }
+        const previousBlock = this.chain[block.height - 1];
+        return block.previousBlockHash === previousBlock.hash;
     }
 
 }
