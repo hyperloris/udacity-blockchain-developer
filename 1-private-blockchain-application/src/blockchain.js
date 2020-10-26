@@ -76,6 +76,8 @@ class Blockchain {
 
            self.chain.push(block);
            self.height = newChainHeight;
+
+           resolve(block);
         });
     }
 
@@ -114,23 +116,30 @@ class Blockchain {
     submitStar(address, message, signature, star) {
         let self = this;
         return new Promise(async (resolve, reject) => {
-            const isValid = self._isMessageValid(address, message, signature);
-            if (!isValid) {
-                reject('The message is invalid');
+            const isExpired = self._isMessageExpired(message);
+            if (isExpired) {
+                reject('The message is expired');
+            }
+
+            const isVerified = self._isMessageVerified(address, message, signature);
+            if (!isVerified) {
+                reject('The message is not verified');
             }
 
             const block = new BlockClass.Block({ address, message, signature, star });
-            self._addBlock(block);
-            resolve(block);
+            const addedBlock = self._addBlock(block);
+            resolve(addedBlock);
         });
     }
 
-    _isMessageValid(address, message, signature) {
+    _isMessageExpired(message) {
         const messageTime = parseInt(message.split(':')[1]);
         const currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
-        const isTimeValid = currentTime - messageTime < MESSAGE_EXPIRATION_IN_SEC;
-        const isSignatureValid = bitcoinMessage.verify(message, address, signature);
-        return isTimeValid && isSignatureValid;
+        return (currentTime - messageTime) > MESSAGE_EXPIRATION_IN_SEC;
+    }
+
+    _isMessageVerified(address, message, signature) {
+        return bitcoinMessage.verify(message, address, signature);
     }
 
     /**
