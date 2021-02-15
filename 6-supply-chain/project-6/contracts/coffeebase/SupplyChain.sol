@@ -302,7 +302,7 @@ contract SupplyChain is
     function purchaseItem(uint256 _upc)
         public
         // Call modifier to check if upc has passed previous supply chain stage
-        purchased(_upc)
+        received(_upc)
         // Access Control List enforced by calling Smart Contract / DApp
         onlyConsumer
     {
