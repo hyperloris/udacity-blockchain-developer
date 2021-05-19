@@ -6,6 +6,8 @@ pragma solidity ^0.8.0;
 
 import "../node_modules/@openzeppelin/contracts/utils/math/SafeMath.sol";
 
+import "./FlightSuretyData.sol";
+
 /************************************************** */
 /* FlightSurety Smart Contract                      */
 /************************************************** */
@@ -15,6 +17,9 @@ contract FlightSuretyApp {
     /********************************************************************************************/
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
+
+    uint8 private constant MAX_AIRLINES_WITHOUT_CONSENSUS = 4;
+    uint256 private constant MINIMUM_AIRLINE_PARTECIPATION_FEE = 10 ether;
 
     // Flight status codees
     uint8 private constant STATUS_CODE_UNKNOWN = 0;
@@ -26,6 +31,8 @@ contract FlightSuretyApp {
 
     address private contractOwner; // Account used to deploy contract
 
+    FlightSuretyData private flightSuretyData;
+
     struct Flight {
         bool isRegistered;
         uint8 statusCode;
@@ -33,6 +40,9 @@ contract FlightSuretyApp {
         address airline;
     }
     mapping(bytes32 => Flight) private flights;
+
+    mapping(address => uint256) private airlineVotes;
+    mapping(address => mapping(address => bool)) private airlineVoters;
 
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -60,6 +70,22 @@ contract FlightSuretyApp {
         _;
     }
 
+    modifier requireIsAirline() {
+        require(
+            flightSuretyData.isAirline(msg.sender),
+            "Caller is not a registered airline"
+        );
+        _;
+    }
+
+    modifier requireIsAirlineActive() {
+        require(
+            flightSuretyData.isAirlineActive(msg.sender),
+            "Caller is not an active airline"
+        );
+        _;
+    }
+
     /********************************************************************************************/
     /*                                       CONSTRUCTOR                                        */
     /********************************************************************************************/
@@ -68,8 +94,9 @@ contract FlightSuretyApp {
      * @dev Contract constructor
      *
      */
-    constructor() {
+    constructor(address payable dataContract) {
         contractOwner = msg.sender;
+        flightSuretyData = FlightSuretyData(dataContract);
     }
 
     /********************************************************************************************/
@@ -88,13 +115,52 @@ contract FlightSuretyApp {
      * @dev Add an airline to the registration queue
      *
      */
-
-    function registerAirline()
+    function registerAirline(address airline, string calldata name)
         external
-        pure
+        requireIsOperational
+        requireIsAirline
+        requireIsAirlineActive
         returns (bool success, uint256 votes)
     {
-        return (success, 0);
+        require(
+            !flightSuretyData.isAirline(airline),
+            "This airline is already registered"
+        );
+        success = false;
+        votes = airlineVotes[airline];
+        uint256 airlinesCount = flightSuretyData.getAirlinesCount();
+        if (airlinesCount <= MAX_AIRLINES_WITHOUT_CONSENSUS) {
+            flightSuretyData.registerAirline(airline, name);
+            success = true;
+        } else {
+            voteAirline(airline);
+            votes = airlineVotes[airline];
+            uint256 votesRequired = airlinesCount.mul(100).div(2);
+            if (votes.mul(100) >= votesRequired) {
+                flightSuretyData.registerAirline(airline, name);
+                success = true;
+            }
+        }
+    }
+
+    function voteAirline(address airline) internal {
+        bool alreadyVoted = airlineVoters[msg.sender][airline];
+        require(!alreadyVoted, "You already voted for this airline");
+        airlineVoters[msg.sender][airline] = true;
+        airlineVotes[airline] = airlineVotes[airline].add(1);
+    }
+
+    function fundAirline()
+        external
+        payable
+        requireIsOperational
+        requireIsAirline
+    {
+        flightSuretyData.fundAirline(msg.sender);
+        uint256 fund = flightSuretyData.getAirlineFund(msg.sender);
+        if (fund >= MINIMUM_AIRLINE_PARTECIPATION_FEE) {
+            flightSuretyData.activateAirline(msg.sender);
+        }
     }
 
     /**
@@ -125,7 +191,8 @@ contract FlightSuretyApp {
         uint8 index = getRandomIndex(msg.sender);
 
         // Generate a unique key for storing the request
-        bytes32 key = keccak256(abi.encodePacked(index, airline, flight, timestamp));
+        bytes32 key =
+            keccak256(abi.encodePacked(index, airline, flight, timestamp));
         ResponseInfo storage responseInfo = oracleResponses[key];
         responseInfo.isOpen = true;
         responseInfo.requester = msg.sender;
@@ -258,7 +325,10 @@ contract FlightSuretyApp {
     }
 
     // Returns array of three non-duplicating integers from 0-9
-    function generateIndexes(address account) internal returns (uint8[3] memory) {
+    function generateIndexes(address account)
+        internal
+        returns (uint8[3] memory)
+    {
         uint8[3] memory indexes;
         indexes[0] = getRandomIndex(account);
 
