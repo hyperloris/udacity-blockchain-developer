@@ -40,6 +40,7 @@ contract FlightSuretyData {
             false,
             0
         );
+        airlinesCount = airlinesCount.add(1);
     }
 
     /********************************************************************************************/
@@ -125,7 +126,7 @@ contract FlightSuretyData {
         requireIsCallerAuthorized
     {
         airlines[account] = Airline(account, name, true, false, 0);
-        airlinesCount.add(1);
+        airlinesCount = airlinesCount.add(1);
     }
 
     function fundAirline(address account)
@@ -154,7 +155,6 @@ contract FlightSuretyData {
     function isAirlineActive(address account)
         external
         view
-        requireIsCallerAuthorized
         returns (bool)
     {
         return airlines[account].active;
@@ -163,7 +163,6 @@ contract FlightSuretyData {
     function getAirlineFund(address account)
         external
         view
-        requireIsCallerAuthorized
         returns (uint256)
     {
         return airlines[account].fund;
@@ -172,7 +171,6 @@ contract FlightSuretyData {
     function getAirlinesCount()
         external
         view
-        requireIsCallerAuthorized
         returns (uint256)
     {
         return airlinesCount;

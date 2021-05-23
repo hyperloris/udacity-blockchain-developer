@@ -129,10 +129,7 @@ contract FlightSuretyApp {
         success = false;
         votes = airlineVotes[airline];
         uint256 airlinesCount = flightSuretyData.getAirlinesCount();
-        if (airlinesCount <= MAX_AIRLINES_WITHOUT_CONSENSUS) {
-            flightSuretyData.registerAirline(airline, name);
-            success = true;
-        } else {
+        if (airlinesCount >= MAX_AIRLINES_WITHOUT_CONSENSUS) {
             voteAirline(airline);
             votes = airlineVotes[airline];
             uint256 votesRequired = airlinesCount.mul(100).div(2);
@@ -140,6 +137,9 @@ contract FlightSuretyApp {
                 flightSuretyData.registerAirline(airline, name);
                 success = true;
             }
+        } else {
+            flightSuretyData.registerAirline(airline, name);
+            success = true;
         }
     }
 
@@ -156,7 +156,7 @@ contract FlightSuretyApp {
         requireIsOperational
         requireIsAirline
     {
-        flightSuretyData.fundAirline(msg.sender);
+        flightSuretyData.fundAirline{value: msg.value}(msg.sender);
         uint256 fund = flightSuretyData.getAirlineFund(msg.sender);
         if (fund >= MINIMUM_AIRLINE_PARTECIPATION_FEE) {
             flightSuretyData.activateAirline(msg.sender);
