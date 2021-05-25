@@ -45,6 +45,16 @@ contract FlightSuretyApp {
     mapping(address => mapping(address => bool)) private airlineVoters;
 
     /********************************************************************************************/
+    /*                                       EVENTS                                     */
+    /********************************************************************************************/
+
+    event FlightRegistered(
+        address airline,
+        string flight,
+        uint256 timestamp
+    );
+
+    /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
     /********************************************************************************************/
 
@@ -167,20 +177,36 @@ contract FlightSuretyApp {
      * @dev Register a future flight for insuring.
      *
      */
-
-    function registerFlight() external pure {}
+    function registerFlight(string calldata flight)
+        external
+        requireIsOperational
+        requireIsAirline
+        requireIsAirlineActive
+    {
+        bytes32 flightKey = getFlightKey(msg.sender, flight, block.timestamp);
+        flights[flightKey] = Flight(
+            true,
+            STATUS_CODE_UNKNOWN,
+            block.timestamp,
+            msg.sender
+        );
+        emit FlightRegistered(msg.sender, flight, block.timestamp);
+    }
 
     /**
      * @dev Called after oracle has updated flight status
      *
      */
-
     function processFlightStatus(
         address airline,
         string memory flight,
         uint256 timestamp,
         uint8 statusCode
-    ) internal pure {}
+    ) internal {
+        bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+        flights[flightKey].updatedTimestamp = block.timestamp;
+        flights[flightKey].statusCode = statusCode;
+    }
 
     // Generate a request for oracles to fetch flight information
     function fetchFlightStatus(
@@ -198,6 +224,14 @@ contract FlightSuretyApp {
         responseInfo.requester = msg.sender;
 
         emit OracleRequest(index, airline, flight, timestamp);
+    }
+
+    function getFlightKey(
+        address airline,
+        string memory flight,
+        uint256 timestamp
+    ) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(airline, flight, timestamp));
     }
 
     // region ORACLE MANAGEMENT
@@ -314,14 +348,6 @@ contract FlightSuretyApp {
             // Handle flight status as appropriate
             processFlightStatus(airline, flight, timestamp, statusCode);
         }
-    }
-
-    function getFlightKey(
-        address airline,
-        string memory flight,
-        uint256 timestamp
-    ) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(airline, flight, timestamp));
     }
 
     // Returns array of three non-duplicating integers from 0-9
