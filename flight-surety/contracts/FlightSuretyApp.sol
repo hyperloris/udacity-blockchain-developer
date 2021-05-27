@@ -20,6 +20,7 @@ contract FlightSuretyApp {
 
     uint8 private constant MAX_AIRLINES_WITHOUT_CONSENSUS = 4;
     uint256 private constant MINIMUM_AIRLINE_PARTECIPATION_FEE = 10 ether;
+    uint256 private constant MAX_INSURANCE_FEE = 1 ether;
 
     // Flight status codees
     uint8 private constant STATUS_CODE_UNKNOWN = 0;
@@ -45,14 +46,10 @@ contract FlightSuretyApp {
     mapping(address => mapping(address => bool)) private airlineVoters;
 
     /********************************************************************************************/
-    /*                                       EVENTS                                     */
+    /*                                       EVENT DEFINITIONS                                  */
     /********************************************************************************************/
 
-    event FlightRegistered(
-        address airline,
-        string flight,
-        uint256 timestamp
-    );
+    event FlightRegistered(address airline, string flight, uint256 timestamp);
 
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -88,10 +85,34 @@ contract FlightSuretyApp {
         _;
     }
 
+    modifier requireIsNotAirline() {
+        require(
+            !flightSuretyData.isAirline(msg.sender),
+            "Caller is a registered airline"
+        );
+        _;
+    }
+
     modifier requireIsAirlineActive() {
         require(
             flightSuretyData.isAirlineActive(msg.sender),
             "Caller is not an active airline"
+        );
+        _;
+    }
+
+    modifier requireNotExceedMaxInsuranceFee() {
+        require(
+            msg.value <= MAX_INSURANCE_FEE,
+            "Value is higher than the maximum spendable for insurance"
+        );
+        _;
+    }
+
+    modifier requireAirlineHasSufficientFunds(address airline) {
+        require(
+            msg.value > flightSuretyData.getAirlineFunds(airline),
+            "The airline does not have sufficient funds"
         );
         _;
     }
@@ -167,7 +188,7 @@ contract FlightSuretyApp {
         requireIsAirline
     {
         flightSuretyData.fundAirline{value: msg.value}(msg.sender);
-        uint256 fund = flightSuretyData.getAirlineFund(msg.sender);
+        uint256 fund = flightSuretyData.getAirlineFunds(msg.sender);
         if (fund >= MINIMUM_AIRLINE_PARTECIPATION_FEE) {
             flightSuretyData.activateAirline(msg.sender);
         }
@@ -232,6 +253,21 @@ contract FlightSuretyApp {
         uint256 timestamp
     ) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(airline, flight, timestamp));
+    }
+
+    function buyFlightInsurance(
+        address airline,
+        string memory flight,
+        uint256 timestamp
+    )
+        external
+        payable
+        requireIsOperational
+        requireIsNotAirline
+        requireNotExceedMaxInsuranceFee
+        requireAirlineHasSufficientFunds(airline)
+    {
+        flightSuretyData.buyFlightInsurance(airline, flight, timestamp);
     }
 
     // region ORACLE MANAGEMENT

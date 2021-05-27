@@ -9,10 +9,6 @@ contract FlightSuretyData {
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
 
-    address private contractOwner; // Account used to deploy contract
-    bool private operational = true; // Blocks all state changes throughout the contract if false
-    mapping(address => uint256) private authorizedContracts;
-
     struct Airline {
         address account;
         string name;
@@ -20,7 +16,19 @@ contract FlightSuretyData {
         bool active;
         uint256 fund;
     }
+
+    struct FlightInsurance {
+        address passenger;
+        uint256 amount;
+    }
+
+    address private contractOwner;
+    bool private operational = true;
+    mapping(address => uint256) private authorizedContracts;
+
     mapping(address => Airline) private airlines;
+    mapping(bytes32 => FlightInsurance[]) private insurances;
+
     uint256 private airlinesCount = 0;
 
     /********************************************************************************************/
@@ -144,43 +152,31 @@ contract FlightSuretyData {
         airlines[account].active = true;
     }
 
-    function isAirline(address account)
-        external
-        view
-        returns (bool)
-    {
+    function isAirline(address account) external view returns (bool) {
         return airlines[account].registered;
     }
 
-    function isAirlineActive(address account)
-        external
-        view
-        returns (bool)
-    {
+    function isAirlineActive(address account) external view returns (bool) {
         return airlines[account].active;
     }
 
-    function getAirlineFund(address account)
-        external
-        view
-        returns (uint256)
-    {
+    function getAirlineFunds(address account) external view returns (uint256) {
         return airlines[account].fund;
     }
 
-    function getAirlinesCount()
-        external
-        view
-        returns (uint256)
-    {
+    function getAirlinesCount() external view returns (uint256) {
         return airlinesCount;
     }
 
-    /**
-     * @dev Buy insurance for a flight
-     *
-     */
-    function buy() external payable {}
+    function buyFlightInsurance(
+        address airline,
+        string memory flight,
+        uint256 timestamp
+    ) external payable requireIsOperational requireIsCallerAuthorized {
+        bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+        insurances[flightKey].push(FlightInsurance(msg.sender, msg.value));
+        airlines[airline].fund = airlines[airline].fund.add(msg.value);
+    }
 
     /**
      *  @dev Credits payouts to insurees
