@@ -1,5 +1,5 @@
-const FlightSuretyApp = artifacts.require("FlightSuretyApp");
-const FlightSuretyData = artifacts.require("FlightSuretyData");
+const FlightSuretyApp = artifacts.require('FlightSuretyApp');
+const FlightSuretyData = artifacts.require('FlightSuretyData');
 const fs = require('fs');
 
 module.exports = function (deployer, network, accounts) {
@@ -9,7 +9,7 @@ module.exports = function (deployer, network, accounts) {
         .then(() => {
             return deployer.deploy(FlightSuretyApp, FlightSuretyData.address)
                 .then(() => {
-                    let config = {
+                    const config = {
                         localhost: {
                             url: 'http://localhost:9545',
                             dataAddress: FlightSuretyData.address,
