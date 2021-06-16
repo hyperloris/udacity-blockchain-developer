@@ -6,8 +6,13 @@ module.exports = {
       host: '127.0.0.1',
       port: 9545,
       network_id: '*',
-      gas: 4500000
-    }
+      gas: 4500000,
+      gasPrice: 10000000000
+    },
+    develop: {
+      accounts: 50,
+      defaultEtherBalance: 50,
+    },
   },
   compilers: {
     solc: {
