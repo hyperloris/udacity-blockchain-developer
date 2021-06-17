@@ -14,6 +14,7 @@ contract FlightSuretyApp {
     uint8 private constant MAX_AIRLINES_WITHOUT_CONSENSUS = 4;
     uint256 private constant MINIMUM_AIRLINE_PARTECIPATION_FEE = 10 ether;
     uint256 private constant MAX_INSURANCE_FEE = 1 ether;
+    uint16 private constant INSURANCE_CREDIT_MULTIPLIER = 150;
 
     // Flight status codees
     uint8 private constant STATUS_CODE_UNKNOWN = 0;
@@ -174,6 +175,13 @@ contract FlightSuretyApp {
     ) internal {
         bytes32 flightKey = getFlightKey(airline, flight, timestamp);
         flightSuretyData.updateFlightStatus(flightKey, statusCode);
+        if (statusCode == STATUS_CODE_LATE_AIRLINE) {
+            flightSuretyData.creditInsurees(
+                flightKey,
+                airline,
+                INSURANCE_CREDIT_MULTIPLIER
+            );
+        }
     }
 
     function fetchFlightStatus(
@@ -216,6 +224,10 @@ contract FlightSuretyApp {
             flight,
             timestamp
         );
+    }
+
+    function withdrawBalance() external requireIsOperational {
+        flightSuretyData.payInsuree(msg.sender);
     }
 
     /********************************************************************************************/

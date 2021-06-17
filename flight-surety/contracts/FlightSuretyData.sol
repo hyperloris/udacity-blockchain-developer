@@ -41,6 +41,7 @@ contract FlightSuretyData {
     mapping(bytes32 => Flight) private flights;
 
     mapping(bytes32 => FlightInsurance[]) private insurances;
+    mapping(address => uint256) private insureeBalances;
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -214,13 +215,30 @@ contract FlightSuretyData {
         return keccak256(abi.encodePacked(airline, flight, timestamp));
     }
 
-    function creditInsurees() external pure {}
-
-    function pay() external pure {}
-
-    function fund() public payable {}
-
-    fallback() external payable {
-        fund();
+    function creditInsurees(
+        bytes32 flightKey,
+        address airline,
+        uint16 insuranceCreditMultiplier
+    ) external requireIsOperational requireIsCallerAuthorized {
+        FlightInsurance[] memory flightInsurances = insurances[flightKey];
+        for (uint256 i = 0; i < flightInsurances.length; i++) {
+            FlightInsurance memory passengerInsurance = flightInsurances[i];
+            uint256 credit = passengerInsurance.amount.mul(insuranceCreditMultiplier).div(100);
+            insureeBalances[passengerInsurance.passenger] = insureeBalances[passengerInsurance.passenger].add(credit);
+            airlines[airline].fund = airlines[airline].fund.sub(credit);
+        }
+        delete insurances[flightKey];
     }
+
+    function payInsuree(address insuree)
+        external
+        requireIsOperational
+        requireIsCallerAuthorized
+    {
+        uint256 amount = insureeBalances[insuree];
+        insureeBalances[insuree] = 0;
+        payable(insuree).transfer(amount);
+    }
+
+    fallback() external payable {}
 }
