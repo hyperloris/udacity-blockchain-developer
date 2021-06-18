@@ -240,5 +240,15 @@ contract FlightSuretyData {
         payable(insuree).transfer(amount);
     }
 
+    function getBalance(address insuree)
+        external
+        view
+        requireIsOperational
+        requireIsCallerAuthorized
+        returns (uint256)
+    {
+        return insureeBalances[insuree];
+    }
+
     fallback() external payable {}
 }

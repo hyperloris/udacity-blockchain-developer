@@ -230,6 +230,10 @@ contract FlightSuretyApp {
         flightSuretyData.payInsuree(msg.sender);
     }
 
+    function getBalance() external view requireIsOperational returns (uint256) {
+        return flightSuretyData.getBalance(msg.sender);
+    }
+
     /********************************************************************************************/
     /*                                       ORACLES                                            */
     /********************************************************************************************/
