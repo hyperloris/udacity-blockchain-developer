@@ -32,7 +32,15 @@ contract FlightSuretyApp {
     /*                                       EVENT DEFINITIONS                                  */
     /********************************************************************************************/
 
+    event AirlineRegistered(address airline);
+
+    event AirlineActivated(address airline);
+
     event FlightRegistered(address airline, string flight, uint256 timestamp);
+
+    event InsurancePurchased(address buyer, uint256 amount);
+
+    event InsuranceCreditsWithdrawn(address insuree);
 
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -125,10 +133,12 @@ contract FlightSuretyApp {
             if (votes.mul(100) >= votesRequired) {
                 flightSuretyData.registerAirline(airline, name);
                 success = true;
+                emit AirlineRegistered(airline);
             }
         } else {
             flightSuretyData.registerAirline(airline, name);
             success = true;
+            emit AirlineRegistered(airline);
         }
     }
 
@@ -149,6 +159,7 @@ contract FlightSuretyApp {
         uint256 fund = flightSuretyData.getAirlineFunds(msg.sender);
         if (fund >= MINIMUM_AIRLINE_PARTECIPATION_FEE) {
             flightSuretyData.activateAirline(msg.sender);
+            emit AirlineActivated(msg.sender);
         }
     }
 
@@ -224,10 +235,12 @@ contract FlightSuretyApp {
             flight,
             timestamp
         );
+        emit InsurancePurchased(msg.sender, msg.value);
     }
 
     function withdrawBalance() external requireIsOperational {
         flightSuretyData.payInsuree(msg.sender);
+        emit InsuranceCreditsWithdrawn(msg.sender);
     }
 
     function getBalance() external view requireIsOperational returns (uint256) {
