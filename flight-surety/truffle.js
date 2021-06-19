@@ -11,7 +11,7 @@ module.exports = {
     },
     develop: {
       accounts: 50,
-      defaultEtherBalance: 50,
+      defaultEtherBalance: 1000,
     },
   },
   compilers: {

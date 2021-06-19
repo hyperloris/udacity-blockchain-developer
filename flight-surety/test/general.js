@@ -1,7 +1,7 @@
 const Test = require('../config/testConfig.js');
 const BigNumber = require('bignumber.js');
 
-contract('Flight Surety general tests', async (accounts) => {
+contract('General', async (accounts) => {
   let config;
   before('setup contract', async () => {
     config = await Test.Config(accounts);

@@ -12,7 +12,7 @@ contract FlightSuretyApp {
     /********************************************************************************************/
 
     uint8 private constant MAX_AIRLINES_WITHOUT_CONSENSUS = 4;
-    uint256 private constant MINIMUM_AIRLINE_PARTECIPATION_FEE = 10 ether;
+    uint256 public constant MINIMUM_AIRLINE_PARTECIPATION_FEE = 10 ether;
     uint256 private constant MAX_INSURANCE_FEE = 1 ether;
     uint16 private constant INSURANCE_CREDIT_MULTIPLIER = 150;
 
@@ -178,6 +178,15 @@ contract FlightSuretyApp {
         emit FlightRegistered(msg.sender, flight, timestamp);
     }
 
+    function isFlightRegistered(address airline, string calldata flight, uint256 timestamp)
+        external
+        view
+        returns (bool)
+    {
+        bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+        return flightSuretyData.isFlightRegistered(flightKey);
+    }
+
     function processFlightStatus(
         address airline,
         string memory flight,
@@ -294,6 +303,19 @@ contract FlightSuretyApp {
         require(msg.value >= REGISTRATION_FEE, "Registration fee is required");
         uint8[3] memory indexes = generateIndexes(msg.sender);
         oracles[msg.sender] = Oracle({isRegistered: true, indexes: indexes});
+    }
+
+    // This is just for debug/tests purposes
+    function registerOracleWithIndexes(address oracle, uint8[3] memory indexes)
+        external
+        payable
+        requireContractOwner
+    {
+        oracles[oracle] = Oracle({isRegistered: true, indexes: indexes});
+    }
+
+    function isOracleRegistered(address oracle) external view returns (bool) {
+        return oracles[oracle].isRegistered;
     }
 
     function getMyIndexes() external view returns (uint8[3] memory) {

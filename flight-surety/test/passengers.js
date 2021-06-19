@@ -2,7 +2,7 @@ const truffleAssert = require('truffle-assertions');
 const Test = require('../config/testConfig.js');
 const BigNumber = require('bignumber.js');
 
-contract('Flight Surety passengers tests', async (accounts) => {
+contract('Passengers', async (accounts) => {
   let config;
   before('setup contract', async () => {
     config = await Test.Config(accounts);

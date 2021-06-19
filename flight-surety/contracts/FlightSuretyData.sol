@@ -188,6 +188,14 @@ contract FlightSuretyData {
         flights[flightKey] = Flight(true, statusCode, timestamp, airline);
     }
 
+    function isFlightRegistered(bytes32 flightKey)
+        external
+        view
+        returns (bool)
+    {
+        return flights[flightKey].isRegistered;
+    }
+
     function updateFlightStatus(bytes32 flightKey, uint8 statusCode)
         external
         requireIsOperational
