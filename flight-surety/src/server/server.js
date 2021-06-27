@@ -31,11 +31,20 @@ async function setup() {
 async function registerOracles() {
   const registrationFee = await flightSuretyApp.methods.REGISTRATION_FEE().call();
   for (let i = START_ORACLE_INDEX; i < END_ORACLE_INDEX; i++) {
-    await flightSuretyApp.methods.registerOracle().send({
-      from: accounts[i],
+    await registerOracle(accounts[i], registrationFee);
+  }
+}
+
+async function registerOracle(oracleAccount, registrationFee) {
+  try {
+    const tx = await flightSuretyApp.methods.registerOracle().send({
+      from: oracleAccount,
       value: registrationFee,
       ...gasInput
     });
+  } catch (error) {
+    console.log(`Unable to register Oracle=${oracleAccount}`);
+    // console.error(error);
   }
 }
 
