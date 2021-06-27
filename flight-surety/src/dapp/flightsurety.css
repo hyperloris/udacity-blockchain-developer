@@ -5,6 +5,10 @@ body {
   background-size: cover;
 }
 
+.navbar {
+  color: #fff;
+}
+
 .container {
   margin-top: 400px;
   background-color: #000;

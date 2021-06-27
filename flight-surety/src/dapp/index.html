@@ -17,15 +17,61 @@
       aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
+    <div style="flex-grow: 1;"></div>
+    <div>
+      <label class="form">My Account:</label>
+      <select class="account"></select>
+    </div>
   </nav>
 
   <main class="container">
+    <section>
+      <h1>Airline</h1>
+      <div class="top-20">
+        <h4>Registration</h4>
+        <label class="form">Account</label> <select class="airline" id="registerAirlineAccount"></select>
+        <label class="form">Name</label> <input type="text" id="registerAirlineName">
+        <btn class="btn btn-primary" id="registerAirline">Execute</btn>
+      </div>
+      <div class="top-20">
+        <h4>Fund</h4>
+        <btn class="btn btn-primary" id="fundAirline">Execute</btn>
+      </div>
+      <div class="top-20">
+        <h4>Flight registration</h4>
+        <label class="form">Flight number</label> <select class="flight" id="registerFlightNumber"></select>
+        <label class="form">Timestamp</label> <input type="text" id="registerFlightTimestamp">
+        <btn class="btn btn-primary" id="registerFlight">Execute</btn>
+      </div>
+    </section>
+
+    <section>
+      <h1>Passenger</h1>
+      <div class="top-20">
+        <h4>Buy flight insurance</h4>
+        <label class="form">Airline</label> <select class="airline" id="buyFlightInsuranceAirline"></select>
+        <label class="form">Flight</label> <select class="flight" id="buyFlightInsuranceFlight"></select>
+        <label class="form">Timestamp</label> <input type="text" id="buyFlightInsuranceTimestamp">
+        <btn class="btn btn-primary" id="buyFlightInsurance">Execute</btn>
+      </div>
+      <div class="top-20">
+        <h4>Fetch flight status</h4>
+        <label class="form">Airline</label> <select class="airline" id="fetchFlightStatusAirline"></select>
+        <label class="form">Flight</label> <select class="flight" id="fetchFlightStatusFlight"></select>
+        <label class="form">Timestamp</label> <input type="text" id="fetchFlightStatusTimestamp">
+        <btn class="btn btn-primary" id="fetchFlightStatus">Execute</btn>
+      </div>
+      <div class="top-20">
+        <h4>View my balance</h4>
+        <btn class="btn btn-primary" id="withdrawBalance">Execute</btn>
+      </div>
+      <div class="top-20">
+        <h4>Withdrawn credits</h4>
+        <btn class="btn btn-primary" id="getBalance">Execute</btn>
+      </div>
+    </section>
 
     <div id="display-wrapper" class="top-20">
-    </div>
-    <div class="row top-20">
-      <label class="form">Flight</label> <input type="text" id="flight-number">
-      <btn class="btn btn-primary" id="submit-oracle">Submit to Oracles</btn>
     </div>
   </main>
 
