@@ -13,6 +13,7 @@ contract Ownable {
 
     modifier onlyOwner() {
         require(msg.sender == _owner, "Only owner can call");
+        _;
     }
 
     constructor() internal {
@@ -41,19 +42,21 @@ contract Pausable is Ownable {
 
     modifier whenNotPaused() {
         require(!_paused, "Contract is paused");
+        _;
     }
 
     modifier paused() {
         require(_paused, "Contract is not paused");
+        _;
     }
 
     constructor() internal {
         _paused = false;
     }
 
-    function pause(bool paused) public onlyOwner returns (address) {
-        _paused = paused;
-        if (paused) {
+    function pause(bool isPaused) public onlyOwner returns (address) {
+        _paused = isPaused;
+        if (isPaused) {
             emit Paused(msg.sender);
         } else {
             emit Unpaused(msg.sender);
