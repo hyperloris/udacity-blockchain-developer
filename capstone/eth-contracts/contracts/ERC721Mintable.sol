@@ -223,7 +223,7 @@ contract ERC721 is Pausable, ERC165 {
     function _mint(address to, uint256 tokenId) internal {
         require(!_exists(tokenId), "This token already exists");
         require(to == address(to), "Invalid address");
-        _tokenOwner[to] = tokenId;
+        _tokenOwner[tokenId] = to;
         _ownedTokensCount[to].increment();
         emit Transfer(msg.sender, to, tokenId);
     }
@@ -231,7 +231,7 @@ contract ERC721 is Pausable, ERC165 {
     // @dev Internal function to transfer ownership of a given token ID to another address.
     // TIP: remember the functions to use for Counters. you can refresh yourself with the link above
     function _transferFrom(address from, address to, uint256 tokenId) internal {
-        require(_tokenOwner(tokenId) == from, "The 'from' address must be the owner");
+        require(_tokenOwner[tokenId] == from, "The 'from' address must be the owner");
         require(to == address(to), "Invalid address");
         _tokenApprovals[tokenId] = address(0);
         _ownedTokensCount[from].decrement();
