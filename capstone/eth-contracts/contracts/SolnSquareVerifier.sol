@@ -1,59 +1,50 @@
-pragma solidity >=0.4.21 <0.6.0;
+pragma solidity ^0.5.0;
 
-// TODO define a contract call to the zokrates generated solidity contract <Verifier> or <renamedVerifier>
+import "./ERC721Mintable.sol";
+import "./SquareVerifier.sol";
 
+contract SolnSquareVerifier is PropertyToken {
+    SquareVerifier private _verifier;
 
+    struct Solution {
+        uint256 index;
+        address account;
+    }
 
-// TODO define another contract named SolnSquareVerifier that inherits from your ERC721Mintable class
+    Solution[] private _solutions;
 
+    mapping(bytes32 => Solution) private _uniqueSolutions;
 
+    event SolutionAdded(uint256 index, address account);
 
-// TODO define a solutions struct that can hold an index & an address
+    constructor(address verifierAddress) public {
+        _verifier = SquareVerifier(verifierAddress);
+    }
 
+    function mintNFT(
+        address to,
+        uint256 tokenId,
+        uint256[2] memory a,
+        uint256[2][2] memory b,
+        uint256[2] memory c,
+        uint256[2] memory input
+    ) public {
+        bytes32 hash = keccak256(abi.encodePacked(a, b, c, input));
+        require(_uniqueSolutions[hash].account == address(0), "Solution must be unique");
+        bool isVerified = _verifier.verifyTx(a, b, c, input);
+        require(isVerified, "Solution must be verified");
+        _addSolution(hash, tokenId, to);
+        mint(to, tokenId);
+    }
 
-// TODO define an array of the above struct
-
-
-// TODO define a mapping to store unique solutions submitted
-
-
-
-// TODO Create an event to emit when a solution is added
-
-
-
-// TODO Create a function to add the solutions to the array and emit the event
-
-
-
-// TODO Create a function to mint new NFT only after the solution has been verified
-//  - make sure the solution is unique (has not been used before)
-//  - make sure you handle metadata as well as tokenSuplly
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    function _addSolution(
+        bytes32 hash,
+        uint256 index,
+        address account
+    ) internal {
+        Solution memory solution = Solution(index, account);
+        _solutions.push(solution);
+        _uniqueSolutions[hash] = solution;
+        emit SolutionAdded(index, account);
+    }
+}
