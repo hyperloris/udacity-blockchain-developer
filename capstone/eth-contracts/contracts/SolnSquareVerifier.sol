@@ -28,13 +28,13 @@ contract SolnSquareVerifier is PropertyToken {
         uint256[2][2] memory b,
         uint256[2] memory c,
         uint256[2] memory input
-    ) public {
+    ) public returns (bool) {
         bytes32 hash = keccak256(abi.encodePacked(a, b, c, input));
         require(_uniqueSolutions[hash].account == address(0), "Solution must be unique");
         bool isVerified = _verifier.verifyTx(a, b, c, input);
         require(isVerified, "Solution must be verified");
         _addSolution(hash, tokenId, to);
-        mint(to, tokenId);
+        return mint(to, tokenId);
     }
 
     function _addSolution(
