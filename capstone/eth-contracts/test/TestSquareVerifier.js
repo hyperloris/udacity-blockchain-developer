@@ -1,5 +1,7 @@
 var SquareVerifier = artifacts.require('SquareVerifier');
 
+var expectFail = require('./utils/expectFail');
+
 contract('SquareVerifier', accounts => {
     const account_one = accounts[0];
 
@@ -26,10 +28,10 @@ contract('SquareVerifier', accounts => {
                 proof,
                 inputs
             } = require('../../zokrates/code/square/proof-wrong.json');
-            const result = await this.verifier.verifyTx(proof.a, proof.b, proof.c, inputs, {
+            const result = this.verifier.verifyTx(proof.a, proof.b, proof.c, inputs, {
                 from: account_one
             });
-            assert(result, false);
+            await expectFail(result);
         })
     });
 })

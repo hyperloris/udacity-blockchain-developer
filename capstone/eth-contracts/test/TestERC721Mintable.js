@@ -1,5 +1,7 @@
 var ERC721MintableComplete = artifacts.require('PropertyToken');
 
+var expectFail = require('./utils/expectFail');
+
 contract('TestERC721Mintable', accounts => {
     const account_one = accounts[0];
     const account_two = accounts[1];
@@ -7,17 +9,23 @@ contract('TestERC721Mintable', accounts => {
     const numberOfTokensPerAccount = 20;
 
     describe('match erc721 spec', function () {
-        beforeEach(async function () { 
-            this.contract = await ERC721MintableComplete.new({from: account_one});
+        beforeEach(async function () {
+            this.contract = await ERC721MintableComplete.new({
+                from: account_one
+            });
             for (let i = 1; i <= numberOfTokensPerAccount; i++) {
-                await this.contract.mint(account_two, i, { from: account_one });
-                await this.contract.mint(account_three, i + numberOfTokensPerAccount, { from: account_one });
+                await this.contract.mint(account_two, i, {
+                    from: account_one
+                });
+                await this.contract.mint(account_three, i + numberOfTokensPerAccount, {
+                    from: account_one
+                });
             }
         })
 
         it('should return total supply', async function () {
             const totalSupply = await this.contract.totalSupply();
-            assert.equal(totalSupply, numberOfTokensPerAccount * 2);  
+            assert.equal(totalSupply, numberOfTokensPerAccount * 2);
         })
 
         it('should get token balance', async function () {
@@ -35,7 +43,9 @@ contract('TestERC721Mintable', accounts => {
 
         it('should transfer token from one owner to another', async function () {
             const initialOwner = await this.contract.ownerOf(30);
-            await this.contract.transferFrom(account_three, account_two, 30, { from: account_three });
+            await this.contract.transferFrom(account_three, account_two, 30, {
+                from: account_three
+            });
             const finalOwner = await this.contract.ownerOf(30);
             assert.equal(initialOwner, account_three);
             assert.equal(finalOwner, account_two);
@@ -44,17 +54,16 @@ contract('TestERC721Mintable', accounts => {
 
     describe('have ownership properties', function () {
         beforeEach(async function () {
-            this.contract = await ERC721MintableComplete.new({from: account_one});
+            this.contract = await ERC721MintableComplete.new({
+                from: account_one
+            });
         })
 
         it('should fail when minting when address is not contract owner', async function () {
-            try {
-                await this.contract.mint(account_two, i, { from: account_one });
-            } catch (error) {
-                assert.exists(error);
-                return;
-            }
-            assert.equal(true, false, 'This test should have failed');
+            const result = this.contract.mint(account_two, 50, {
+                from: account_two
+            });
+            await expectFail(result);
         })
 
         it('should return contract owner', async function () {
