@@ -1,7 +1,7 @@
+var appRoot = require('app-root-path');
+var expectFail = require('./utils/expectFail');
 var SquareVerifier = artifacts.require('SquareVerifier');
 var SolnSquareVerifier = artifacts.require('SolnSquareVerifier');
-
-var expectFail = require('./utils/expectFail');
 
 contract('SolnSquareVerifier', accounts => {
     const account_one = accounts[0];
@@ -21,7 +21,7 @@ contract('SolnSquareVerifier', accounts => {
             const {
                 proof,
                 inputs
-            } = require('../../zokrates/code/square/proof.json');
+            } = require(`${appRoot}/zokrates/code/square/proof.json`);
             const result = await this.contract.mintNFT(account_two, 1, proof.a, proof.b, proof.c, inputs, {
                 from: account_one
             });
@@ -32,7 +32,7 @@ contract('SolnSquareVerifier', accounts => {
             const {
                 proof,
                 inputs
-            } = require('../../zokrates/code/square/proof.json');
+            } = require(`${appRoot}/zokrates/code/square/proof.json`);
             await this.contract.mintNFT(account_two, 1, proof.a, proof.b, proof.c, inputs, {
                 from: account_one
             });
@@ -46,7 +46,7 @@ contract('SolnSquareVerifier', accounts => {
             const {
                 proof,
                 inputs
-            } = require('../../zokrates/code/square/proof-wrong.json');
+            } = require(`${appRoot}/zokrates/code/square/proof-wrong.json`);
             const result = this.contract.mintNFT(account_two, 1, proof.a, proof.b, proof.c, inputs, {
                 from: account_one
             });

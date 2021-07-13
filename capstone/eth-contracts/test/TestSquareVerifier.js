@@ -1,6 +1,6 @@
-var SquareVerifier = artifacts.require('SquareVerifier');
-
+var appRoot = require('app-root-path');
 var expectFail = require('./utils/expectFail');
+var SquareVerifier = artifacts.require('SquareVerifier');
 
 contract('SquareVerifier', accounts => {
     const account_one = accounts[0];
@@ -16,7 +16,7 @@ contract('SquareVerifier', accounts => {
             const {
                 proof,
                 inputs
-            } = require('../../zokrates/code/square/proof.json');
+            } = require(`${appRoot}/zokrates/code/square/proof.json`);
             const result = await this.verifier.verifyTx(proof.a, proof.b, proof.c, inputs, {
                 from: account_one
             });
@@ -27,7 +27,7 @@ contract('SquareVerifier', accounts => {
             const {
                 proof,
                 inputs
-            } = require('../../zokrates/code/square/proof-wrong.json');
+            } = require(`${appRoot}/zokrates/code/square/proof-wrong.json`);
             const result = this.verifier.verifyTx(proof.a, proof.b, proof.c, inputs, {
                 from: account_one
             });
